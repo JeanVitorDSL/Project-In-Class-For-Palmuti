@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Sistema de Cadastro de Alunos</title>
+
+<style>
+
+body{
+    font-family: Arial;
+    background:#f4f4f4;
+    padding:40px;
+}
+
+.container{
+    background:white;
+    padding:25px;
+    border-radius:8px;
+    max-width:500px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+}
+
+input{
+    width:100%;
+    padding:8px;
+    margin-top:5px;
+    margin-bottom:15px;
+}
+
+button{
+    padding:10px;
+    width:100%;
+    background:#007bff;
+    color:white;
+    border:none;
+}
+
+.resultado{
+    margin-top:20px;
+    padding:10px;
+    background:#eee;
+}
+
+.teste{
+    margin-top:30px;
+}
+
+.pass{
+    color:green;
+}
+
+.fail{
+    color:red;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Cadastro de Aluno</h1>
+
+<label>Nome</label>
+<input id="nome">
+
+<label>Idade</label>
+<input id="idade" type="number">
+
+<label>Email</label>
+<input id="email">
+
+<label>Nota Final</label>
+<input id="nota" type="number" step="0.1">
+
+<button onclick="cadastrarAlunoUI()">Cadastrar</button>
+
+<div class="resultado" id="resultado"></div>
+
+<div class="teste">
+<h2>Resultados dos Testes</h2>
+<button onclick="executarTestes()">Rodar Testes</button>
+<div id="testes"></div>
+</div>
+
+</div>
+
+<script>
+
+// ======================
+// MODELO
+// ======================
+
+class Aluno{
+
+constructor(nome,idade,email,nota,status){
+this.nome = nome
+this.idade = idade
+this.email = email
+this.nota = nota
+this.status = status
+}
+
+}
+
+// ======================
+// SERVICE
+// ======================
+
+class AlunoService{
+
+constructor(){
+this.listaAlunos = []
+}
+
+validarNome(nome){
+
+if(!nome || nome.length < 3){
+throw new Error("Nome inválido")
+}
+
+}
+
+validarIdade(idade){
+
+if(idade < 16 || idade > 100){
+throw new Error("Idade inválida")
+}
+
+}
+
+validarEmail(email){
+
+if(!email.includes("@") || !email.includes(".")){
+throw new Error("Email inválido")
+}
+
+}
+
+validarNota(nota){
+
+if(nota < 0 || nota > 10){
+throw new Error("Nota inválida")
+}
+
+}
+
+verificarEmailDuplicado(email){
+
+const existe = this.listaAlunos.find(a => a.email === email)
+
+if(existe){
+throw new Error("Email já cadastrado")
+}
+
+}
+
+calcularStatus(nota){
+
+if(nota >= 7){
+return "Aprovado"
+}
+
+return "Reprovado"
+
+}
+
+cadastrarAluno(nome,idade,email,nota){
+
+this.validarNome(nome)
+this.validarIdade(idade)
+this.validarEmail(email)
+this.validarNota(nota)
+this.verificarEmailDuplicado(email)
+
+const status = this.calcularStatus(nota)
+
+const aluno = new Aluno(nome,idade,email,nota,status)
+
+this.listaAlunos.push(aluno)
+
+return aluno
+
+}
+
+}
+
+const service = new AlunoService()
+
+// ======================
+// INTERFACE
+// ======================
+
+function cadastrarAlunoUI(){
+
+const nome = document.getElementById("nome").value
+const idade = Number(document.getElementById("idade").value)
+const email = document.getElementById("email").value
+const nota = Number(document.getElementById("nota").value)
+
+const resultado = document.getElementById("resultado")
+
+try{
+
+const aluno = service.cadastrarAluno(nome,idade,email,nota)
+
+resultado.innerHTML =
+"Aluno cadastrado com sucesso <br>Status: "+ aluno.status
+
+}catch(erro){
+
+resultado.innerHTML = erro.message
+
+}
+
+}
+
+// ======================
+// TEST FRAMEWORK SIMPLES
+// ======================
+
+function teste(nome,func){
+
+const div = document.getElementById("testes")
+
+try{
+
+func()
+
+div.innerHTML += "<p class='pass'>✔ "+nome+"</p>"
+
+}catch(e){
+
+div.innerHTML += "<p class='fail'>✖ "+nome+"</p>"
+
+}
+
+}
+
+function assert(condicao,mensagem){
+
+if(!condicao){
+throw new Error(mensagem || "Teste falhou")
+}
+
+}
+
+function esperarErro(func){
+
+let erro = false
+
+try{
+func()
+}catch(e){
+erro = true
+}
+
+assert(erro,"Era esperado erro")
+
+}
+
+// ======================
+// TESTES
+// ======================
+
+function executarTestes(){
+
+document.getElementById("testes").innerHTML = ""
+
+const s = new AlunoService()
+
+// NOME
+
+teste("Nome vazio deve falhar",()=>{
+esperarErro(()=>{
+s.cadastrarAluno("",20,"t1@email.com",8)
+})
+})
+
+teste("Nome menor que 3",()=>{
+esperarErro(()=>{
+s.cadastrarAluno("aa",20,"t2@email.com",8)
+})
+})
+
+teste("Nome válido",()=>{
+const a = s.cadastrarAluno("Joao",20,"t3@email.com",8)
+assert(a.nome === "Joao")
+})
+
+// IDADE
+
+teste("Idade menor que 16",()=>{
+esperarErro(()=>{
+s.cadastrarAluno("Joao",15,"t4@email.com",8)
+})
+})
+
+teste("Idade maior que 100",()=>{
+esperarErro(()=>{
+s.cadastrarAluno("Joao",101,"t5@email.com",8)
+})
+})
+
+teste("Idade válida",()=>{
+const a = s.cadastrarAluno("Maria",25,"t6@email.com",8)
+assert(a.idade === 25)
+})
+
+// EMAIL
+
+teste("Email sem @",()=>{
+esperarErro(()=>{
+s.cadastrarAluno("Joao",20,"email.com",8)
+})
+})
+
+teste("Email sem ponto",()=>{
+esperarErro(()=>{
+s.cadastrarAluno("Joao",20,"email@email",8)
+})
+})
+
+teste("Email válido",()=>{
+const a = s.cadastrarAluno("Pedro",30,"t7@email.com",7)
+assert(a.email === "t7@email.com")
+})
+
+// NOTA
+
+teste("Nota menor que 0",()=>{
+esperarErro(()=>{
+s.cadastrarAluno("Joao",20,"t8@email.com",-1)
+})
+})
+
+teste("Nota maior que 10",()=>{
+esperarErro(()=>{
+s.cadastrarAluno("Joao",20,"t9@email.com",11)
+})
+})
+
+teste("Nota válida",()=>{
+const a = s.cadastrarAluno("Carlos",22,"t10@email.com",5)
+assert(a.nota === 5)
+})
+
+// STATUS
+
+teste("Nota 7 aprovado",()=>{
+const a = s.cadastrarAluno("Joao",20,"t11@email.com",7)
+assert(a.status === "Aprovado")
+})
+
+teste("Nota 6.9 reprovado",()=>{
+const a = s.cadastrarAluno("Joao",20,"t12@email.com",6.9)
+assert(a.status === "Reprovado")
+})
+
+teste("Nota 10 aprovado",()=>{
+const a = s.cadastrarAluno("Ana",19,"t13@email.com",10)
+assert(a.status === "Aprovado")
+})
+
+teste("Nota 0 reprovado",()=>{
+const a = s.cadastrarAluno("Lucas",21,"t14@email.com",0)
+assert(a.status === "Reprovado")
+})
+
+// CADASTRO COMPLETO
+
+teste("Cadastro completo válido",()=>{
+const a = s.cadastrarAluno("Joao Silva",20,"t15@email.com",8.5)
+assert(a.nome === "Joao Silva")
+assert(a.status === "Aprovado")
+})
+
+// EMAIL DUPLICADO
+
+teste("Email duplicado deve falhar",()=>{
+esperarErro(()=>{
+s.cadastrarAluno("Teste",20,"duplicado@email.com",8)
+s.cadastrarAluno("Teste2",22,"duplicado@email.com",9)
+})
+})
+
+}
+
+</script>
+
+</body>
+</html>
