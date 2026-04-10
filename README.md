@@ -211,6 +211,18 @@ Executados no navegador sem dependências externas — clique em **Rodar Testes*
 
 ---
 
+## 🎥 Evidências de Execução
+
+### Frontend — Testes no navegador
+
+https://github.com/JeanVitorDSL/student-crud-frontend-backend-tests/blob/main/Grava%C3%A7%C3%A3o%20de%20tela%20de%202026-03-05%2020-21-54.webm
+
+### Backend — Testes com Jest + Supertest
+
+https://github.com/JeanVitorDSL/student-crud-frontend-backend-tests/blob/main/Grava%C3%A7%C3%A3o%20de%20tela%20de%202026-03-05%2023-41-59.webm
+
+---
+
 ## 💡 Destaques Técnicos
 
 - **Factory function no Express** (`createApp`): permite criar uma instância isolada do app em cada teste, evitando contaminação de estado entre os casos.
